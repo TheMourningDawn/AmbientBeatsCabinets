@@ -7,7 +7,8 @@
 
 FASTLED_USING_NAMESPACE;
 
-#define NUM_LEDS 150
+#define NUM_LEDS 140
+#define BRIGHTNESS 230
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
@@ -16,7 +17,7 @@ class LEDAnimations
   private:
     SpectrumEqualizerClient *equalizer;
   public:
-    CRGB borderLeds[NUM_LEDS];
+    CRGB leds[NUM_LEDS];
     uint8_t numberOfPatterns;
     int currentPattern;
     int currentHue;
@@ -44,22 +45,13 @@ class LEDAnimations
     void juggle();
 
     void waterfall();
-    void waterfallCascading();
     void waterfallBorder(int frequencyValue, int sensitivityValueMinThreshold, int brightness);
-
-    void waterfallBorderRemoteAndSpectrum(int frequencyValue, int sensitivityThreshold);
     void waterfallBorderRemote();
-    void waterfallBorderCascading(int frequencyValue, int sensitivityThreshold);
     void waterfallRainbowBorder();
 
     void equalizerBorderOnly();
-    void equalizerBorderOnlyReversed();
-    void equalizerLeftToRightBottomToTop();
-    void equalizerRightToLeftBottomToTop();
-    void equalizerRightToLeftTopToBottom();
-    void equalizerLeftBorder(int frequencyValue, int sensitivityThreshold, bool direction);
-    void equalizerRightBorder(int frequencyValue, int sensitivityThreshold, bool direction);
-    void equalizerTopBorder(int frequencyValue, int sensitivityThreshold, bool direction);
+    void equalizerLeft(int frequencyValue, int sensitivityThreshold, bool direction);
+    void equalizerRight(int frequencyValue, int sensitivityThreshold, bool direction);
 };
 
 #endif

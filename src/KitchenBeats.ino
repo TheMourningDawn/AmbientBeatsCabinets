@@ -7,8 +7,6 @@
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 
-#define BRIGHTNESS 255
-
 SpectrumEqualizerClient *spectrum;
 LEDAnimations *animations;
 
@@ -18,19 +16,24 @@ IPAddress udpIP(239,1,1,232);
 
 int hueValue = 100;
 
+bool shouldResetDevice = false;
+
 void setup() {
-    /*Serial.begin(11520);*/
+    if(shouldResetDevice == true) {
+      System.reset();
+    }
+    // Serial.begin(11520);
     setupCloudModeFunctions();
-    // connectToRemote();
+    connectToRemote();
 
     spectrum = new SpectrumEqualizerClient();
     animations = new LEDAnimations(spectrum);
 
-    FastLED.addLeds<LED_TYPE, BORDER_LED_PIN, COLOR_ORDER>(animations->borderLeds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<LED_TYPE, BORDER_LED_PIN, COLOR_ORDER>(animations->leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   }
 
 void loop() {
-    // readColorFromRemote();
+    readColorFromRemote();
     animations->runCurrentAnimation();
     FastLED.show();
 }
@@ -50,17 +53,20 @@ void readColorFromRemote() {
 void setupCloudModeFunctions() {
     Particle.function("nextMode", nextMode);
     Particle.function("previousMode", previousMode);
+    Particle.function("reset device", resetDevice);
 
     Particle.subscribe("NEXT_MODE", handleNextMode);
     Particle.subscribe("PREVIOUS_MODE", handlePreviousMode);
 }
 
+int resetDevice(String dunno) {
+  shouldResetDevice = true;
+  return 1;
+}
+
 int nextMode(String mode) {
     int currentPattern = animations->nextPattern();
-    char currentPatternString[5];
-    sprintf(currentPatternString, "%i", currentPattern);
-    Particle.publish("Current Pattern", currentPatternString);
-    return 1;
+    return currentPattern;
 }
 
 void handleNextMode(const char *eventName, const char *data) {
@@ -69,10 +75,7 @@ void handleNextMode(const char *eventName, const char *data) {
 
 int previousMode(String mode) {
     int currentPattern = animations->previousPattern();
-    char currentPatternString[5];
-    sprintf(currentPatternString, "%i", currentPattern);
-    Particle.publish("Current Pattern", currentPatternString);
-    return 1;
+    return currentPattern;
 }
 
 void handlePreviousMode(const char *eventName, const char *data) {
