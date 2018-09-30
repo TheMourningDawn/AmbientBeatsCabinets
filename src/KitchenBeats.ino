@@ -10,6 +10,8 @@
 SpectrumEqualizerClient *spectrum;
 LEDAnimations *animations;
 
+bool poweredOn = true;
+
 UDP udpMulticast;
 int udpPort = 47555;
 IPAddress udpIP(239,1,1,232);
@@ -53,14 +55,40 @@ void readColorFromRemote() {
 void setupCloudModeFunctions() {
     Particle.function("nextMode", nextMode);
     Particle.function("previousMode", previousMode);
-    Particle.function("reset device", resetDevice);
+
+    Particle.function("reset-device", resetDevice);
+    Particle.function("enter-safe-mode", enterSafeMode);
+    Particle.function("power-on", powerOn);
+    Particle.function("power-off", powerOff);
 
     Particle.subscribe("NEXT_MODE", handleNextMode);
     Particle.subscribe("PREVIOUS_MODE", handlePreviousMode);
 }
 
-int resetDevice(String dunno) {
-  shouldResetDevice = true;
+int resetDevice(String arg) {
+   System.reset();
+
+   return 1;
+}
+
+int enterSafeMode(String arg) {
+  System.enterSafeMode();
+
+  return 1;
+}
+
+int powerOn(String arg) {
+    poweredOn = true;
+
+    return 1;
+}
+
+int powerOff(String arg) {
+  poweredOn = false;
+
+  animations->clearAllLeds();
+  FastLED.show();
+
   return 1;
 }
 

@@ -10,23 +10,22 @@ SpectrumEqualizerClient *equalizer;
 
 uint16_t globalSensitivity = 500;
 uint8_t frequencyMode[7] = {0, 1, 2, 3, 4, 5, 6};
-int currentPattern = 0;
+int currentPattern = 5;
 int currentHue = 120;
 
 typedef void (LEDAnimations::*AnimationList)();
 
 AnimationList animationList[] = {&LEDAnimations::sinelon, &LEDAnimations::waterfallRainbowBorder,
-            &LEDAnimations::confetti, &LEDAnimations::juggle, &LEDAnimations::rainbow,
-            &LEDAnimations::equalizerBorderOnly, &LEDAnimations::waterfall};
+            &LEDAnimations::confetti, &LEDAnimations::juggle, &LEDAnimations::rainbow, &LEDAnimations::waterfall};
 
 LEDAnimations::LEDAnimations() : equalizer(new SpectrumEqualizerClient()) {
     numberOfPatterns = ARRAY_SIZE(animationList) - 1;
-    currentPattern = 0;
+    currentPattern = 5;
 }
 
 LEDAnimations::LEDAnimations(SpectrumEqualizerClient *eq) : equalizer(eq) {
     numberOfPatterns = ARRAY_SIZE(animationList) - 1;
-    currentPattern = 0;
+    currentPattern = 5;
 }
 
 int LEDAnimations::runCurrentAnimation() {
@@ -113,16 +112,6 @@ void LEDAnimations::sinelon() {
     leds[pos] += CHSV(currentHue, 255, 192);
 }
 
-// colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-void LEDAnimations::bpm() {
-    uint8_t BeatsPerMinute = 120;
-    CRGBPalette16 palette = PartyColors_p;
-    uint8_t beat = beatsin8(BeatsPerMinute, 64, 255);
-    for (int i = 0; i < NUM_LEDS; i++) { //9948
-        leds[i]= ColorFromPalette(palette, currentHue + (i * 2), beat - currentHue + (i * 10));
-    }
-}
-
 // eight colored dots, weaving in and out of sync with each other
 void LEDAnimations::juggle() {
     int frequencyValue = equalizer->frequenciesLeftChannel[frequencyMode[0]];
@@ -130,13 +119,13 @@ void LEDAnimations::juggle() {
 
     fadeToBlackBy(leds, NUM_LEDS, 20);
     byte dothue = 0;
-    // if (frequencyValue > frequencyThreshold) {
+    if (frequencyValue > frequencyThreshold) {
         for (int i = 0; i < 8; i++) {
             int currentLocation = beatsin16(i + 7, 0, NUM_LEDS);
             leds[currentLocation] |= CHSV(dothue, 200, 255);
             dothue += 32;
         }
-    // }
+    }
 }
 
 void LEDAnimations::waterfall() {
@@ -153,21 +142,21 @@ void LEDAnimations::waterfallBorder(int frequencyValue, int frequencyValueMinThr
         leds[NUM_LEDS / 2] = CRGB(0, 0, 0);
     }
     // When doing a memmove, don't move outside of the bounds of the array!!!
-    memmove(&leds[0], &leds[1], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
-    memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
+    memmove(&leds[0], &leds[1], (NUM_LEDS / 2) * sizeof(CRGB));
+    memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2) * sizeof(CRGB));
 }
 
 void LEDAnimations::waterfallBorderRemote() {
     leds[NUM_LEDS / 2] = CHSV(currentHue, 200, 255);
     memmove(&leds[0], &leds[1], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
-    memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
+    memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2) * sizeof(CRGB));
 }
 
 uint8_t hueCounter = 0;
 void LEDAnimations::waterfallRainbowBorder() {
     leds[NUM_LEDS / 2] = CHSV(hueCounter, 200, 255);
     memmove(&leds[0], &leds[1], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
-    memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
+    memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2) * sizeof(CRGB));
     hueCounter++;
 }
 
