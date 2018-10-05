@@ -18,8 +18,6 @@ class LEDAnimations
     SpectrumEqualizerClient *equalizer;
   public:
     CRGB leds[NUM_LEDS];
-    uint8_t numberOfPatterns;
-    int currentPattern;
     int currentHue;
 
     LEDAnimations();
@@ -38,7 +36,9 @@ class LEDAnimations
     void randomSilon();
 
     void clearAllLeds();
+    void fillSolid();
     void rainbow();
+    void rainbowSlide();
     void confetti();
     void sinelon();
     void bpm();
@@ -52,6 +52,11 @@ class LEDAnimations
     void equalizerBorderOnly();
     void equalizerLeft(int frequencyValue, int sensitivityThreshold, bool direction);
     void equalizerRight(int frequencyValue, int sensitivityThreshold, bool direction);
+
+    bool getMusicReactive();
+    void setMusicReactive(bool newMusicReactiveValue);
+
+    int getNumberOfPatterns();
 };
 
 #endif

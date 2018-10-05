@@ -10,20 +10,14 @@
 SpectrumEqualizerClient *spectrum;
 LEDAnimations *animations;
 
-bool poweredOn = true;
-
 UDP udpMulticast;
 int udpPort = 47555;
 IPAddress udpIP(239,1,1,232);
 
 int hueValue = 100;
-
-bool shouldResetDevice = false;
+bool poweredOn = true;
 
 void setup() {
-    if(shouldResetDevice == true) {
-      System.reset();
-    }
     // Serial.begin(11520);
     setupCloudModeFunctions();
     connectToRemote();
@@ -35,9 +29,12 @@ void setup() {
   }
 
 void loop() {
-    readColorFromRemote();
-    animations->runCurrentAnimation();
-    FastLED.show();
+    if(poweredOn) {
+      // readColorFromRemote();
+
+      animations->runCurrentAnimation();
+      FastLED.show();
+    }
 }
 
 void connectToRemote() {
@@ -53,22 +50,32 @@ void readColorFromRemote() {
 }
 
 void setupCloudModeFunctions() {
-    Particle.function("nextMode", nextMode);
-    Particle.function("previousMode", previousMode);
+    Particle.variable("currentHue", hueValue);
 
+    Particle.function("next-mode", nextMode);
+    Particle.function("previous-mode", previousMode);
     Particle.function("reset-device", resetDevice);
-    Particle.function("enter-safe-mode", enterSafeMode);
+    Particle.function("safe-mode", enterSafeMode);
     Particle.function("power-on", powerOn);
     Particle.function("power-off", powerOff);
+    Particle.function("toggle-music", toggleMusicReactive);
+    Particle.function("set-rgb", setColor);
+    Particle.function("set-hue", setHue);
+
 
     Particle.subscribe("NEXT_MODE", handleNextMode);
     Particle.subscribe("PREVIOUS_MODE", handlePreviousMode);
+    Particle.subscribe("RESET", handleReset);
 }
 
 int resetDevice(String arg) {
    System.reset();
 
    return 1;
+}
+
+void handleReset(const char *eventName, const char *data) {
+  resetDevice("whatever");
 }
 
 int enterSafeMode(String arg) {
@@ -92,6 +99,12 @@ int powerOff(String arg) {
   return 1;
 }
 
+int toggleMusicReactive(String arg) {
+  animations->setMusicReactive(!animations->getMusicReactive());
+
+  return 1;
+}
+
 int nextMode(String mode) {
     int currentPattern = animations->nextPattern();
     return currentPattern;
@@ -108,4 +121,41 @@ int previousMode(String mode) {
 
 void handlePreviousMode(const char *eventName, const char *data) {
     previousMode("seriouslyWhy?");
+}
+
+int setHue(String hueString) {
+  hueValue = hueString.toInt();
+
+  animations->currentHue = hueValue;
+}
+
+//Expects rgb values to be in r,g,b format e.g. 140,200,90
+int setColor(String rgbString) {
+   char buffer[12];
+   rgbString.toCharArray(buffer, 12);
+   String r = "";
+   String g = "";
+   String b = "";
+
+   int rgbItem = 0;
+   for(int i=0;i<12;i++) {
+     if(buffer[i] != ',') {
+       if(rgbItem == 0) {
+         r.concat(buffer[i]);
+       } else if(rgbItem == 1) {
+         g.concat(buffer[i]);
+       } else if(rgbItem == 2) {
+         b.concat(buffer[i]);
+       }
+     } else {
+       rgbItem++;
+     }
+   }
+
+   CRGB rgb = CRGB(r.toInt(),g.toInt(),b.toInt());
+   CHSV hsv = rgb2hsv_approximate(rgb);
+
+   animations->currentHue = hsv.hue;
+
+   return hsv.hue;
 }

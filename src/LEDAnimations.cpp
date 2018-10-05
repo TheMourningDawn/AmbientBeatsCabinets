@@ -10,22 +10,23 @@ SpectrumEqualizerClient *equalizer;
 
 uint16_t globalSensitivity = 500;
 uint8_t frequencyMode[7] = {0, 1, 2, 3, 4, 5, 6};
-int currentPattern = 5;
+int currentPattern = 0;
 int currentHue = 120;
+bool musicReactive = true;
 
 typedef void (LEDAnimations::*AnimationList)();
+AnimationList animationList[] = {&LEDAnimations::waterfall, &LEDAnimations::sinelon, &LEDAnimations::waterfallRainbowBorder,
+            &LEDAnimations::confetti, &LEDAnimations::juggle, &LEDAnimations::fillSolid, &LEDAnimations::rainbow,
+            &LEDAnimations::rainbowSlide};
 
-AnimationList animationList[] = {&LEDAnimations::sinelon, &LEDAnimations::waterfallRainbowBorder,
-            &LEDAnimations::confetti, &LEDAnimations::juggle, &LEDAnimations::rainbow, &LEDAnimations::waterfall};
+int numberOfPatterns = ARRAY_SIZE(animationList) - 1;
 
-LEDAnimations::LEDAnimations() : equalizer(new SpectrumEqualizerClient()) {
-    numberOfPatterns = ARRAY_SIZE(animationList) - 1;
-    currentPattern = 5;
-}
+LEDAnimations::LEDAnimations() : equalizer(new SpectrumEqualizerClient()) { }
 
-LEDAnimations::LEDAnimations(SpectrumEqualizerClient *eq) : equalizer(eq) {
-    numberOfPatterns = ARRAY_SIZE(animationList) - 1;
-    currentPattern = 5;
+LEDAnimations::LEDAnimations(SpectrumEqualizerClient *eq) : equalizer(eq) { }
+
+int LEDAnimations::getNumberOfPatterns() {
+   return numberOfPatterns;
 }
 
 int LEDAnimations::runCurrentAnimation() {
@@ -91,25 +92,43 @@ void LEDAnimations::clearAllLeds() {
   }
 }
 
+void LEDAnimations::fillSolid() {
+  fill_solid(leds, NUM_LEDS, currentHue);
+}
+
 void LEDAnimations::rainbow() {
     fill_rainbow(leds, NUM_LEDS, currentHue);
+}
+
+void LEDAnimations::rainbowSlide() {
+   fill_rainbow(leds, NUM_LEDS, currentHue);
+   currentHue++;
 }
 
 // random colored speckles that blink in and fade smoothly
 void LEDAnimations::confetti() {
     uint8_t position = random16(NUM_LEDS);
+    int frequencyValue = equalizer->frequenciesLeftChannel[frequencyMode[0]];
     uint16_t frequencyThreshold = clampSensitivity(globalSensitivity + 600);
 
     fadeToBlackBy(leds, NUM_LEDS, 10);
 
-    leds[position] += CHSV(currentHue + random8(64), 200, 255);
+    if(!musicReactive || frequencyValue > frequencyThreshold) {
+      leds[position] += CHSV(currentHue + random8(64), 200, 255);
+    }
 }
 
 // a colored dot sweeping back and forth, with fading trails
 void LEDAnimations::sinelon() {
+    int frequencyValue = equalizer->frequenciesLeftChannel[frequencyMode[0]];
+    uint16_t frequencyThreshold = clampSensitivity(globalSensitivity + 600);
+
     fadeToBlackBy(leds, NUM_LEDS, 1);
-    int pos = beatsin16(13, 0, NUM_LEDS);
-    leds[pos] += CHSV(currentHue, 255, 192);
+
+    if(!musicReactive || (frequencyValue > frequencyThreshold)) {
+      int pos = beatsin16(13, 0, NUM_LEDS);
+      leds[pos] += CHSV(currentHue, 255, 192);
+    }
 }
 
 // eight colored dots, weaving in and out of sync with each other
@@ -119,7 +138,7 @@ void LEDAnimations::juggle() {
 
     fadeToBlackBy(leds, NUM_LEDS, 20);
     byte dothue = 0;
-    if (frequencyValue > frequencyThreshold) {
+    if(!musicReactive || frequencyValue > frequencyThreshold) {
         for (int i = 0; i < 8; i++) {
             int currentLocation = beatsin16(i + 7, 0, NUM_LEDS);
             leds[currentLocation] |= CHSV(dothue, 200, 255);
@@ -134,7 +153,7 @@ void LEDAnimations::waterfall() {
 }
 
 void LEDAnimations::waterfallBorder(int frequencyValue, int frequencyValueMinThreshold, int brightness) {
-    if (frequencyValue > frequencyValueMinThreshold) {
+    if(!musicReactive || frequencyValue > frequencyValueMinThreshold) {
         int mappedFrequencyValue = map(frequencyValue, frequencyValueMinThreshold, 4096, 0, 255);
         mappedFrequencyValue = (mappedFrequencyValue + 120) % 255; //offsetting the base color...
         leds[NUM_LEDS / 2] = CHSV(mappedFrequencyValue, brightness, 255);
@@ -148,14 +167,14 @@ void LEDAnimations::waterfallBorder(int frequencyValue, int frequencyValueMinThr
 
 void LEDAnimations::waterfallBorderRemote() {
     leds[NUM_LEDS / 2] = CHSV(currentHue, 200, 255);
-    memmove(&leds[0], &leds[1], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
+    memmove(&leds[0], &leds[1], (NUM_LEDS / 2) * sizeof(CRGB));
     memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2) * sizeof(CRGB));
 }
 
 uint8_t hueCounter = 0;
 void LEDAnimations::waterfallRainbowBorder() {
     leds[NUM_LEDS / 2] = CHSV(hueCounter, 200, 255);
-    memmove(&leds[0], &leds[1], (NUM_LEDS / 2 - 1) * sizeof(CRGB));
+    memmove(&leds[0], &leds[1], (NUM_LEDS / 2) * sizeof(CRGB));
     memmove(&leds[NUM_LEDS / 2 + 1], &leds[NUM_LEDS / 2], (NUM_LEDS / 2) * sizeof(CRGB));
     hueCounter++;
 }
@@ -196,6 +215,14 @@ void LEDAnimations::equalizerRight(int frequencyValue, int sensitivityThreshold,
             }
         }
     }
+}
+
+bool LEDAnimations::getMusicReactive() {
+  return musicReactive;
+}
+
+void LEDAnimations::setMusicReactive(bool newMusicReactiveValue) {
+  musicReactive = newMusicReactiveValue;
 }
 
 
