@@ -14,7 +14,6 @@ UDP udpMulticast;
 int udpPort = 47555;
 IPAddress udpIP(239,1,1,232);
 
-int hueValue = 100;
 bool poweredOn = true;
 
 void setup() {
@@ -31,7 +30,6 @@ void setup() {
 void loop() {
     if(poweredOn) {
       // readColorFromRemote();
-
       animations->runCurrentAnimation();
       FastLED.show();
     }
@@ -44,13 +42,12 @@ void connectToRemote() {
 
 void readColorFromRemote() {
    if(udpMulticast.parsePacket() > 0) {
-     hueValue = udpMulticast.read() << 8 | udpMulticast.read();
+     animations->currentHue = udpMulticast.read() << 8 | udpMulticast.read();
    }
-   animations->currentHue = hueValue;
 }
 
 void setupCloudModeFunctions() {
-    Particle.variable("currentHue", hueValue);
+    Particle.variable("currentHue", animations->currentHue);
 
     Particle.function("next-mode", nextMode);
     Particle.function("previous-mode", previousMode);
@@ -124,9 +121,7 @@ void handlePreviousMode(const char *eventName, const char *data) {
 }
 
 int setHue(String hueString) {
-  hueValue = hueString.toInt();
-
-  animations->currentHue = hueValue;
+  animations->currentHue = hueString.toInt();
 }
 
 //Expects rgb values to be in r,g,b format e.g. 140,200,90
