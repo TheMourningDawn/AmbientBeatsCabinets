@@ -1,0 +1,9 @@
+[submodule "lib/AmbientBeatsCloudFunctions"]
+	path = lib/AmbientBeatsCloudFunctions
+	url = https://github.com/TheMourningDawn/AmbientBeatsCloudFunctions
+[submodule "lib/AmbientBeatsLEDAnimations"]
+	path = lib/AmbientBeatsLEDAnimations
+	url = https://github.com/TheMourningDawn/AmbientBeatsLEDAnimations
+[submodule "lib/SpectrumEqualizerClient"]
+	path = lib/SpectrumEqualizerClient
+	url = https://github.com/TheMourningDawn/SpectrumEqualizerClient

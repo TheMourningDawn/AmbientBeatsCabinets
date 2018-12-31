@@ -3,40 +3,27 @@
 
 #include "application.h"
 #include "SpectrumEqualizerClient.h"
+#include "AmbientBeatsLEDAnimations.h"
 #include "FastLED.h"
 
 FASTLED_USING_NAMESPACE;
 
 #define NUM_LEDS 140
-#define BRIGHTNESS 230
 
-#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
-
-class LEDAnimations
+class LEDAnimations : public AmbientBeatsLEDAnimations
 {
-  private:
-    SpectrumEqualizerClient *equalizer;
-  public:
-    CRGB leds[NUM_LEDS];
-    int currentHue;
-
-    LEDAnimations();
+public:
     LEDAnimations(SpectrumEqualizerClient* eq);
 
-    int runCurrentAnimation();
-    int nextPattern();
-    int previousPattern();
-    void nextFrequencyMode();
-    void previousFrequencyMode();
+    CRGB leds[NUM_LEDS];
 
-    int clampToRange(int numberToClamp, int lowerBound, int upperBound);
-    int clampSensitivity(int sensitivity);
-    int wrapToRange(int numberToWrap, int lowerBound, int upperBound);
-
-    void randomSilon();
+    int runAnimation();
+    int toggleAudioReactive();
 
     void clearAllLeds();
-    void fillSolid();
+    void fillColor();
+
+    void randomSilon();
     void rainbow();
     void rainbowSlide();
     void confetti();
@@ -52,11 +39,6 @@ class LEDAnimations
     void equalizerBorderOnly();
     void equalizerLeft(int frequencyValue, int sensitivityThreshold, bool direction);
     void equalizerRight(int frequencyValue, int sensitivityThreshold, bool direction);
-
-    bool getMusicReactive();
-    void setMusicReactive(bool newMusicReactiveValue);
-
-    int getNumberOfPatterns();
 };
 
 #endif
