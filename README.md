@@ -13,7 +13,7 @@ You'll also need to set up a Particle account, and [register your first device](
 if you haven't already.
 
 #### Device Firmware
-AmbientBeats requires the device be flashed with [v0.8.0-rc.11](https://github.com/particle-iot/firmware/releases/tag/v0.8.0-rc.11) or greater.
+AmbientBeats requires the device be flashed with [v1.2.1](https://github.com/particle-iot/device-os/releases/tag/v1.2.1) or greater.
 The flashing process is quite simple, but requires that you have the [cli installed.](https://docs.particle.io/tutorials/developer-tools/cli/).
 The instructions on the GitHub firmware page should suffice, but more information about manually flashing can be found [here.](https://docs.particle.io/support/troubleshooting/firmware-upgrades/photon/)
 
